@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<body id="mainbody" background="brick.jpg">
+<h1 style="font-family:verdana;"> <img src="brickman.jpg" align="left"> Bo's Brick Backend</h1>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+var access_token = localStorage.getItem('_adobesign_access_token');
+var refresh_token = localStorage.getItem('_adobesign_refresh_token');
+var transient_id = localStorage.getItem('_adobesign_doc_id');
+/*
+document.write("Got refresh token : " + access_token);
+document.write("<br>");
+document.write("Got refresh token : " + refresh_token);
+document.write("<br>");
+document.write("Got doc id : " + transient_id);
+document.write("<br>");
+document.write("<br>");
+*/
+const data = {
+      "fileInfos": [
+        {
+          "transientDocumentId": transient_id
+        }
+      ],
+      "name": "TestWidget", // FEEL FREE TO NAME THE WIDGET WHATEVER YOU WANT. THIS IS THE NAME THAT WILL SHOW UP IN EMAILS AND STATUS REPORTS 
+      "state": "ACTIVE",
+      "widgetParticipantSetInfo": {
+        "memberInfos": [
+          {
+            "email": ""
+          }
+        ],
+        "role": "SIGNER"
+      }
+};
+
+$.ajax({
+             type: "POST",
+             url: "https://api.na2.echosign.com/api/rest/v6/widgets",
+             headers: {
+                "Authorization":"Bearer " + access_token
+             },
+             data: JSON.stringify(data),
+             dataType: 'json',
+             contentType: "application/json",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                //alert("Creation Succeeded with: " + jqXHR.responseText);
+                var jsonReturn = JSON.parse(jqXHR.responseText);
+                var returnedWidgetID = jsonReturn.id;
+                 
+                 localStorage.setItem('_adobesign_widget_id', returnedWidgetID);
+           
+
+                 var delayInMilliseconds = 2000; // it seems to need a second or two to breathe before the next call 
+
+                 setTimeout(function() {
+                 displayWidget();
+                 }, delayInMilliseconds);
+
+             },
+             error: function (jqXHR, status) {
+                alert("Failed with: " + jqXHR.responseText);
+                refreshToken(); 
+             }
+          });
+
+
+
+function displayWidget() {
+   //alert("Displaying Widget with id: " + localStorage.getItem('_adobesign_widget_id'));
+   var widgetID = localStorage.getItem('_adobesign_widget_id');
+
+   const data = {
+      "name": "SIGNING" //ALL to enable editing, SIGNING to create just signing url
+   };
+
+   $.ajax({
+             type: "POST",
+             url: "https://api.na2.echosign.com/api/rest/v6/widgets/" + widgetID + "/views",
+             headers: {
+                "Authorization":"Bearer " + access_token
+             },
+             data: JSON.stringify(data),
+             dataType: 'json',
+             contentType: "application/json",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                var jsonReturn = JSON.parse(jqXHR.responseText);
+                //alert("response is " + JSON.stringify(jsonReturn, null, 2));
+                
+                var viewList = jsonReturn.widgetViewList;
+                //alert("ViewList is " + JSON.stringify(viewList, null, 2));
+                //alert("0  is " + JSON.stringify(viewList[0], null, 2));
+                var embedCode =  viewList[0]["embeddedCode"];
+
+                //alert("Embed" + embedCode);
+
+
+////////////////////////// BEGIN Redirect sign//////////////////
+                     // alert("Embed code is " + embedCode);
+                var wid = embedCode.substring(embedCode.indexOf("wid=")+4,embedCode.indexOf("'>"));
+                //alert("wid is " + wid);
+
+                var customerurl = "https://ec2-54-212-193-141.us-west-2.compute.amazonaws.com:4443/customer.html?wid=" +wid;
+      var a_customer = document.createElement('a');
+      var linkText = document.createTextNode("Your Document is ready for signing, click here to sign or copy it and send it to your friends!");
+      a_customer.appendChild(linkText);
+      a_customer.title = "Link";
+      a_customer.href = customerurl;
+      document.body.appendChild(a_customer);
+
+
+
+////////////////////////// END  Redirect sign//////////////////
+
+              displayEditWidget();
+             },
+             error: function (jqXHR, status) {
+                alert("Failed with: " + jqXHR.responseText);
+                refreshToken(); 
+             }
+          });
+
+
+
+}
+
+
+function displayEditWidget() {
+   var widgetID = localStorage.getItem('_adobesign_widget_id');
+
+   const data = {
+      "name": "ALL" //ALL to enable editing, SIGNING to create just signing url
+   };
+
+   $.ajax({
+             type: "POST",
+             url: "https://api.na2.echosign.com/api/rest/v6/widgets/" + widgetID + "/views",
+             headers: {
+                "Authorization":"Bearer " + access_token
+             },
+             data: JSON.stringify(data),
+             dataType: 'json',
+             contentType: "application/json",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                var jsonReturn = JSON.parse(jqXHR.responseText);
+                //alert("response is " + JSON.stringify(jsonReturn, null, 2));
+                
+                var viewList = jsonReturn.widgetViewList;
+                //alert("ViewList is " + JSON.stringify(viewList, null, 2));
+                //alert("0  is " + JSON.stringify(viewList[0], null, 2));
+                var embedCode =  viewList[0]["embeddedCode"];
+
+                var aid =  embedCode.substring(embedCode.indexOf("aid=")+4,embedCode.indexOf("&pid"));
+                var pid =  embedCode.substring(embedCode.indexOf("pid=")+4,embedCode.indexOf("&locale"));
+                var cid =  embedCode.substring(embedCode.indexOf("client_id=")+10,embedCode.indexOf("&noChr"));
+
+               document.body.appendChild(document.createElement('br'));
+               document.body.appendChild(document.createElement('br'));
+
+                var editurl = "https://ec2-54-212-193-141.us-west-2.compute.amazonaws.com:4443/editor.html?aid=" + aid + "&pid=" + pid + "&cid=" + cid ;
+      var a_edit = document.createElement('a');
+      var linkText = document.createTextNode("Or click here to edit the fields manually");
+      a_edit.appendChild(linkText);
+      a_edit.title = "Link";
+      a_edit.href = editurl;
+      document.body.appendChild(a_edit);
+             },
+             error: function (jqXHR, status) {
+                alert("Failed with: " + jqXHR.responseText);
+                refreshToken(); 
+             }
+          });
+}
+
+function refreshToken() {
+   alert("trying to refresh the token");
+
+   const data = {
+      "refresh_token":refresh_token,
+      "client_id":"", // INSERT YOUR CLIENT ID HERE
+      "client_secret":"", // INSERT YOUR CLIENT SECRET HERE
+      "grant_type":"refresh_token"
+   };
+
+   $.ajax({
+             type: "POST",
+             url: "https://api.na2.echosign.com/oauth/refresh",
+             //headers: {
+             //   "Authorization":"Bearer " + access_token
+             //},
+             data: data,
+             contentType: "application/x-www-form-urlencoded",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                 alert("refresh Succeeded with: " + jqXHR.responseText);
+                 var jsonOauth = JSON.parse(jqXHR.responseText);
+                 var returnedAccessToken = jsonOauth.access_token;
+                 
+                 localStorage.setItem('_adobesign_access_token', returnedAccessToken);
+             },
+
+             error: function (jqXHR, status) {
+                 alert("refresh Failed with: " + jqXHR.responseText);
+             }
+          });   
+
+
+}
+
+</script>
+<script id=signing>
+
+</script>
+
+
+</body>
+
+</html>

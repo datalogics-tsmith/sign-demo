@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body id="mainbody" background="brick.jpg">
+<h1 style="font-family:verdana;"> <img src="brickman.jpg" align="left"> Bo's Brick Backend</h1>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+
+<script>
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+
+
+document.write('<script type="text/javascript" language="JavaScript" src="https://secure.na2.echosign.com/embed/account/widgetEdit?aid='+getUrlVars()["aid"]+'&amp;pid='+getUrlVars()["pid"]+'&amp;locale=en&amp;client_id='+getUrlVars()["cid"]+'&amp;noChrome=true"><\/script>');
+</script>
+
+
+
+</body>
+
+</html>

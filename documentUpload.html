@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html>
+<body id="mainbody" background="brick.jpg">
+<h1 style="font-family:verdana;"> <img src="brickman.jpg" align="left"> Bo's Brick Backend</h1>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+var access_token = localStorage.getItem('_adobesign_access_token');
+var refresh_token = localStorage.getItem('_adobesign_refresh_token');
+/*
+document.write("Got refresh token : " + access_token);
+document.write("<br>");
+document.write("Got refresh token : " + refresh_token);
+document.write("<br>");
+document.write("<br>");
+*/
+var h = document.createElement("H3")                // Create a <h1> element
+var t = document.createTextNode("Select a file to submit for signing:  ");     // Create a text node
+h.appendChild(t); 
+var fileElement = document.createElement("input");
+fileElement.type = "file";
+fileElement.id = "myFile";
+fileElement.accept = ".pdf";
+fileElement.class = "uploader";
+h.appendChild(fileElement);
+document.getElementById("mainbody").appendChild(h);
+
+
+
+
+function uploadFile() {
+   //alert("click");
+
+
+   fileData = document.getElementById("myFile").files;
+   //alert("filedata is " + fileData);
+   var thefile = fileData[0];
+   //alert("thefile is " + thefile);
+
+   var access_token = localStorage.getItem('_adobesign_access_token');
+ 
+   var form = new FormData();
+   form.append("File", thefile);
+
+
+   $.ajax({
+             type: "POST",
+             url: "https://api.na2.echosign.com/api/rest/v6/transientDocuments",
+             headers: {
+                "Authorization":"Bearer " + access_token
+             },
+             data: form,
+             contentType: false,
+             processData: false,
+             mimeType: "multipart/form-data",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                 //alert("Succeeded with: " + jqXHR.responseText);
+                 var jsonTransientDoc = JSON.parse(jqXHR.responseText);
+                 var docID = jsonTransientDoc.transientDocumentId;
+                 
+                 localStorage.setItem('_adobesign_doc_id', docID);
+                 //alert("Doc id is " + localStorage.getItem('_adobesign_doc_id'));
+                 document.getElementById("signButton").disabled=false;
+             },
+
+             error: function (jqXHR, status) {
+                 alert("Failed with: " + jqXHR.responseText);
+                 refreshToken();
+             }
+          });
+}
+
+function refreshToken() {
+   alert("trying to refresh the token");
+
+   const data = {
+      "refresh_token":refresh_token,
+      "client_id":"", // INSERT CLIENT ID HERE
+      "client_secret":"", // INSERT CLIENT SECRET HERE
+      "grant_type":"refresh_token"
+   };
+
+   $.ajax({
+             type: "POST",
+             url: "https://api.na2.echosign.com/oauth/refresh", // You might need to change this if your API url is different
+             data: data,
+             contentType: "application/x-www-form-urlencoded",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                 alert("refresh Succeeded with: " + jqXHR.responseText);
+                 var jsonOauth = JSON.parse(jqXHR.responseText);
+                 var returnedAccessToken = jsonOauth.access_token;
+                 
+                 localStorage.setItem('_adobesign_access_token', returnedAccessToken);
+             },
+
+             error: function (jqXHR, status) {
+                 alert("refresh Failed with: " + jqXHR.responseText);
+             }
+          });   
+
+
+}
+
+
+</script>
+
+
+</body>
+
+<input type="button" value="Upload file" onclick="uploadFile();">
+<br>
+<form action="https://ec2-54-212-193-141.us-west-2.compute.amazonaws.com:4443/signDocument.html">
+    <input id="signButton" type="submit" value="Sign it!" disabled=true />
+</form>
+
+
+</html>
+
+

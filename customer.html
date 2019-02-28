@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body id="mainbody" background="wood2.jpg">
+
+<h1 style="font-family:verdana;"> <img src="shack.png" align="left"> Moe's Signature Shack</h1>
+<h3 style="font-family:verdana;"> Delivering fresh, signable documents since 2019</h3>
+
+<script>
+
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+}
+document.write("<script type='text/javascript' language='JavaScript' src='https://secure.na2.echosign.com/public/embeddedWidget?wid="+getUrlVars()["wid"]+"'><\/script>");
+</script>
+
+
+
+
+</body>
+
+</html>

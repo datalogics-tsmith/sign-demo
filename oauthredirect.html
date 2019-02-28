@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html>
+<body id="mainbody">
+
+<h2> We have returned from OAuth</h2>
+
+
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+var url_string = window.location.href
+var url = new URL(url_string);
+
+var returned_code = url.searchParams.get("code");
+document.write("Code is: " + returned_code);
+document.write("<br>");
+
+var returned_api_access_point = url.searchParams.get("api_access_point");
+document.write("API Access point is : " + returned_api_access_point);
+document.write("<br>");
+
+var returned_web_access_point = url.searchParams.get("web_access_point");
+document.write("Web Access point is : " + returned_web_access_point);
+document.write("<br>");
+document.write("<br>");
+
+const data = {
+  "code":returned_code,
+  "client_id":"", // FILL IN CLIENT ID HERE
+  "client_secret":"", // FILL IN CLIENT SECRET HERE
+  "redirect_uri":"", // FILL IN THE REDIRECT URI HERE
+  "grant_type":"authorization_code"
+};
+
+
+var oauth_url = returned_api_access_point + "oauth/token";
+document.write("POSTing to " + oauth_url);
+document.write("<br>");
+
+
+$.ajax({
+             type: "POST",
+             url: oauth_url,
+             data: data,
+             contentType: "application/x-www-form-urlencoded",
+             crossDomain: true,
+             success: function (data, status, jqXHR) {
+                 var textnode = document.createTextNode(jqXHR.responseText);  
+                 document.getElementById("mainbody").appendChild(textnode);  
+
+
+
+                 document.getElementById("mainbody").appendChild(textnode); 
+                
+                 var breakElement = document.createElement('br');
+                 document.body.appendChild(breakElement);
+                 document.body.appendChild(breakElement);
+
+                 var linkElement = document.createElement('a');
+                 var linkText = document.createTextNode("Let's upload a document!");
+                 linkElement.appendChild(linkText);
+                 linkElement.title = "Upload";
+                 linkElement.href = "documentUpload.html";
+                 document.body.appendChild(linkElement);
+
+
+  
+
+                 alert("Got a token " + jqXHR.responseText);
+                 var jsonOauth = JSON.parse(jqXHR.responseText);
+                 var accessToken = jsonOauth.access_token;
+                 var refreshToken = jsonOauth.refresh_token;
+                 alert("access " + accessToken);
+                 alert("refresh " + refreshToken);
+                 
+                 localStorage.setItem('_adobesign_access_token', accessToken);
+                 localStorage.setItem('_adobesign_refresh_token', refreshToken);
+             },
+
+             error: function (jqXHR, status) {
+                 // error handler
+                 var textnode = document.createTextNode("Token failure response: " + jqXHR.responseText);  
+                 document.getElementById("mainbody").appendChild(textnode); 
+                 
+                 alert("Failed to get token" + jqXHR.responseText);
+                
+                 
+             }
+          });
+
+</script>
+</body>
+
+</html>
+
